@@ -80,6 +80,7 @@ def logData(querystring, postdata, ip,raw):
 
     curDate = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%dT%H:%M:%S')
     data = {}
+    data['type'] = 'elasticpot'
     data['timestamp'] = curDate
     data['event_type'] = "alert"
     data['src_ip'] = ip
