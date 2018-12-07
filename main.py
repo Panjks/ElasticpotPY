@@ -8,6 +8,8 @@ import ipaddress
 import urllib.request
 from urllib.parse import quote
 import json
+import logging
+import logging.handler
 
 ##########################
 # Config section
@@ -15,6 +17,12 @@ import json
 
 configfile = "elasticpot.cfg"   # point to elasticpot.cfg or an ews.cfg if you use ewsposter
 hostport = 9200                 # port to run elasticpot on
+
+logger = logging.getLogger()
+fh = logging.handlers.SysLogHandler(("122.228.19.76", 514), logging.handlers.SysLogHandler.LOG_AUTH)
+formatter = logging.Formatter('%(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
 
 ##########################
 # FUNCTIONS
@@ -92,7 +100,7 @@ def logData(querystring, postdata, ip,raw):
         with open(jsonpath, 'a') as outfile:
             json.dump(data, outfile)
             outfile.write('\n')
-
+            logger.error(json.dumps(data).rstrip('\t\r\n\0'))
 
     # send via own posting mechanism to defined server
     else:

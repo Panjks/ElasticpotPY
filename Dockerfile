@@ -1,32 +1,34 @@
-# ElasticPotPY Dockerfile by MS
-#
-# VERSION 16.03.2
-FROM ubuntu:14.04.3
-MAINTAINER MS
+FROM alpine
 
-ENV DEBIAN_FRONTEND noninteractive
-
-EXPOSE 9200
-
-# Setup apt
-RUN ln -snf /bin/bash /bin/sh && apt-get update -y && apt-get upgrade -y
+# Include dist
+ADD dist/ /root/dist/
 
 # Install packages
-RUN apt-get install -y python3 python3-setuptools supervisor git
-RUN easy_install3 bottle requests configparser datetime
+RUN apk -U --no-cache add \
+             git \
+             python3 && \
+    pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install --no-cache-dir bottle \
+                                configparser \
+                                datetime \
+                                requests && \
+    mkdir -p /opt && \
+    cd /opt/ && \
+    git clone --depth=1 https://github.com/Panjks/ElasticpotPY.git && \
 
 # Setup user, groups and configs
-RUN addgroup --gid 2000 tpot && \
-    adduser --system --no-create-home --shell /bin/bash --uid 2000 --disabled-password --disabled-login --gid 2000 tpot
-
-ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+    addgroup -g 2000 elasticpot && \
+    adduser -S -H -s /bin/ash -u 2000 -D -g 2000 elasticpot && \
+    mv /root/dist/elasticpot.cfg /opt/ElasticpotPY/ && \
+    mkdir /opt/ElasticpotPY/log && \
 
 # Clean up
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    apk del --purge git && \
+    rm -rf /root/* && \
+    rm -rf /var/cache/apk/*
 
-WORKDIR /opt
-RUN git clone https://github.com/schmalle/ElasticpotPY.git
-
-WORKDIR /opt/ElasticpotPY
-
-CMD ["/usr/bin/supervisord"]
+# Start elasticpot
+STOPSIGNAL SIGINT
+USER elasticpot:elasticpot
+WORKDIR /opt/ElasticpotPY/
+CMD ["/usr/bin/python3","main.py"]
